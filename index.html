@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>a great perhaps — room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* VOICE: quiet, elegant, a white gallery open to the sky
+   IDEA: a round museum room; every song is the cover held in a slab of glass
+   PICTURE: the 3D room fills the screen, white ceramic floor, glass slabs on the walls and at the centre
+   COLOUR and TYPE: white and sky, ink #13232d; Cormorant Garamond for names, Jost for small UI
+   LAYOUT: room full screen; liquid-glass HUD at the bottom, glass cards rise on arrival */
+:root{color-scheme:light;--ink:#13232d;--sky:#dbe9f3}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--sky);color:var(--ink);font:16px/1.5 Jost,system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.glass{background:linear-gradient(140deg,rgba(255,255,255,.62),rgba(255,255,255,.3));backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,.75);box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(255,255,255,.25),0 18px 45px -18px rgba(19,35,45,.45)}
+.card.glass{background:linear-gradient(140deg,rgba(255,255,255,.88),rgba(255,255,255,.66))}
+#intro{position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 20%,#fff 0,#eef4f8 40%,#cfe1ee 100%);z-index:10;transition:opacity .7s}
+#intro.gone{opacity:0;pointer-events:none}
+.card0{width:min(420px,100%);text-align:center}
+.card0 img{width:min(280px,66vw);aspect-ratio:1;object-fit:cover;box-shadow:0 30px 60px -22px rgba(19,35,45,.5)}
+.card0 h1{font:italic 300 clamp(40px,10vw,54px)/1.05 'Cormorant Garamond',serif;margin:22px 0 6px}
+.card0 p{margin:0;font-size:14px;letter-spacing:.02em;opacity:.7}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+.go{margin-top:22px;background:var(--ink);color:#fff;padding:0 30px;height:50px;border-radius:999px;font-weight:400}
+button:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.hint{font-size:13px;opacity:.6;margin-top:16px}
+#lang{position:fixed;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:12;height:40px;min-width:52px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:500;letter-spacing:.04em}
+#hud{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 14px calc(16px + env(safe-area-inset-bottom));z-index:5;pointer-events:none}
+.nav{display:flex;align-items:center;gap:4px;padding:5px;border-radius:999px;pointer-events:auto}
+.nav button{height:44px;min-width:44px;padding:0 16px;border-radius:999px;font-size:15px;transition:background .2s}
+.nav button:hover{background:rgba(255,255,255,.5)}
+.nav .arrow{font-size:22px;line-height:1;padding:0 14px}
+#mid{min-width:116px;font-weight:500}
+.nav.pulse{animation:pulse 1.6s ease-in-out 3}
+@keyframes pulse{50%{box-shadow:inset 0 1px 1px rgba(255,255,255,.95),0 0 0 6px rgba(255,255,255,.7),0 18px 45px -18px rgba(19,35,45,.45)}}
+#tip{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,8px);width:min(320px,calc(100% - 32px));padding:12px 40px 12px 16px;border-radius:18px;font-size:14px;line-height:1.4;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;z-index:7}
+#tip.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#tip::after{content:'';position:absolute;left:50%;bottom:-7px;width:14px;height:14px;margin-left:-7px;transform:rotate(45deg);background:rgba(255,255,255,.7);border-right:1px solid rgba(255,255,255,.75);border-bottom:1px solid rgba(255,255,255,.75)}
+.card{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,16px) scale(.98);width:min(440px,calc(100% - 24px));border-radius:24px;padding:18px 20px 16px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:6;user-select:text;-webkit-user-select:text}
+.card.on{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto}
+.card small{font-size:12px;letter-spacing:.06em;opacity:.65}
+.card h2{margin:0 0 6px;font:italic 400 32px/1.05 'Cormorant Garamond',serif}
+.card p{margin:0 0 12px;font-size:15px;line-height:1.5}
+.card p:last-child{margin-bottom:2px}
+.x{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;font-size:20px;line-height:1;opacity:.7}
+.x:hover{opacity:1;background:rgba(255,255,255,.5)}
+#album{max-height:calc(100% - 150px);overflow:auto}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{display:inline-flex;align-items:center;height:38px;padding:0 14px;border-radius:999px;background:var(--ink);color:#fff;text-decoration:none;font-size:14px}
+.links a.alt{background:rgba(255,255,255,.6);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(19,35,45,.18)}
+#now{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);padding:7px 16px;border-radius:999px;font-size:14px;white-space:nowrap;opacity:0;transition:opacity .3s;z-index:5;pointer-events:none}
+#now.on{opacity:1}
+#now i{font:italic 400 18px 'Cormorant Garamond',serif}
+#cross{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(19,35,45,.5);opacity:0;pointer-events:none;z-index:4}
+#cross.on{opacity:.9}
+#esc{position:fixed;top:calc(14px + env(safe-area-inset-top));left:calc(14px + env(safe-area-inset-left));display:none;align-items:center;gap:8px;font-size:12px;opacity:.55;transition:opacity .3s;pointer-events:none;z-index:5}
+#esc.show{display:flex}
+#esc.pulse{opacity:1}
+#esc kbd{font:500 11px Jost,sans-serif;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,.75);box-shadow:inset 0 -1px 0 rgba(19,35,45,.2),0 0 0 1px rgba(19,35,45,.15)}
+#esc.pulse kbd{animation:kb 1.2s ease-in-out infinite}
+@keyframes kb{50%{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.8),0 0 0 1px rgba(19,35,45,.25)}}
+@media (min-width:900px){#tip{display:none}}
+#look{position:fixed;top:calc(62px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-6px);display:flex;align-items:center;gap:10px;padding:8px 16px;border-radius:999px;font-size:14px;white-space:nowrap;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;z-index:7}
+#look.on{opacity:1;transform:translate(-50%,0)}
+.sw{position:relative;width:34px;height:14px;border-radius:7px;background:rgba(19,35,45,.12)}
+.sw i{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ink);animation:sw 1.6s ease-in-out infinite}
+@keyframes sw{50%{left:22px}}
+@media (max-width:600px){#now{top:calc(60px + env(safe-area-inset-top))}}
+@media (prefers-reduced-motion:reduce){.card,#intro,#now,#tip{transition:none}.nav.pulse,#esc.pulse kbd{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<button id="lang" class="glass" aria-label="Cambiar a español">ES</button>
+
+<div id="intro">
+  <div class="card0">
+    <img src="cover.jpg" alt="a great perhaps cover">
+    <h1>a great perhaps</h1>
+    <p data-t="sub"></p>
+    <button class="go" id="enter" data-t="enter"></button>
+    <div class="hint" id="hintTxt"></div>
+  </div>
+</div>
+
+<div id="now" class="glass"><span data-t="now"></span> · <i id="nowT"></i></div>
+<div id="cross"></div>
+<div id="esc"><kbd>Esc</kbd><span id="escT"></span></div>
+
+<div id="album" class="card glass" aria-live="polite">
+  <button class="x" data-close="album" aria-label="Close">×</button>
+  <small data-t="albumTag"></small>
+  <h2>a great perhaps</h2>
+  <p data-t="album1"></p>
+  <p data-t="album2"></p>
+</div>
+
+<div id="info" class="card glass" aria-live="polite">
+  <button class="x" data-close="info" aria-label="Close">×</button>
+  <small id="iNum"></small>
+  <h2 id="iTitle"></h2>
+  <p id="iText"></p>
+  <div class="links">
+    <a id="lS" href="#" target="_blank" rel="noopener">Spotify</a>
+    <a id="lA" class="alt" href="#" target="_blank" rel="noopener">Apple Music</a>
+    <a id="lY" class="alt" href="#" target="_blank" rel="noopener">YouTube</a>
+  </div>
+</div>
+
+<div id="look" class="glass"><span class="sw"><i></i></span><span data-t="look"></span></div>
+<div id="tip" class="glass"><button class="x" id="tipX" aria-label="Close">×</button><span data-t="tip"></span></div>
+
+<div id="hud">
+  <div class="nav glass" id="nav">
+    <button class="arrow" id="prev" aria-label="Previous song">‹</button>
+    <button id="mid"></button>
+    <button class="arrow" id="next" aria-label="Next song">›</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="config.js"></script>
+<script>
+{
+const SONGS=AGP.SONGS,TXT=AGP.TXT,AL=AGP.ARTIST_LINKS;
+let lang='en';try{if(localStorage.getItem('agp-lang')==='es')lang='es';}catch(e){}
+const N=SONGS.length,R=14,WH=7.6,FS=2.6,STAND=5.4,EYE=1.65;
+const FY=3.75,LABY=FY-FS/2-.75,GC=(LABY-.5+FY+FS/2+.2)/2;
+const SPAWN=new THREE.Vector3(0,0,3.6);
+const $=id=>document.getElementById(id);
+const touch=matchMedia('(pointer:coarse)').matches;
+
+/* ---------- escena ---------- */
+const cv=$('gl');
+const ren=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));
+ren.outputEncoding=THREE.sRGBEncoding;
+ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.05;
+const scene=new THREE.Scene();
+const SKY=new THREE.Color('#d7e7f2');scene.background=SKY;scene.fog=new THREE.Fog(SKY,20,50);
+const cam=new THREE.PerspectiveCamera(68,1,.1,120);cam.rotation.order='YXZ';
+{
+ const env=new THREE.Scene();
+ const gc=document.createElement('canvas');gc.width=16;gc.height=256;const gx=gc.getContext('2d');
+ const gr=gx.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#ffffff');gr.addColorStop(.45,'#cfe3f1');gr.addColorStop(.55,'#f2f2ee');gr.addColorStop(1,'#e8e8e4');gx.fillStyle=gr;gx.fillRect(0,0,16,256);
+ env.add(new THREE.Mesh(new THREE.SphereGeometry(50,32,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(gc),side:THREE.BackSide})));
+ const lp=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.MeshBasicMaterial({color:0xffffff}));lp.position.y=40;lp.rotation.x=Math.PI/2;env.add(lp);
+ const pm=new THREE.PMREMGenerator(ren);scene.environment=pm.fromScene(env,.02).texture;
+}
+scene.add(new THREE.HemisphereLight(0xffffff,0xe9e6e0,.55));
+const sun=new THREE.DirectionalLight(0xfff6e6,.9);sun.position.set(-8,16,6);scene.add(sun);
+const fc=document.createElement('canvas');fc.width=fc.height=1024;
+{const x=fc.getContext('2d'),T=256;
+ for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+  const v=244+Math.floor(Math.random()*8);x.fillStyle=`rgb(${v},${v},${v-2})`;x.fillRect(c*T,r*T,T,T);
+  x.strokeStyle='rgba(150,150,145,.10)';x.lineWidth=1.2;
+  for(let k=0;k<3;k++){x.beginPath();let px=c*T+Math.random()*T,py=r*T;x.moveTo(px,py);for(let s=0;s<8;s++){px+=(Math.random()-.5)*60;py+=T/8;x.lineTo(px,py);}x.stroke();}
+ }
+ x.fillStyle='#d6d6d1';for(let i=0;i<=4;i++){x.fillRect(i*T-2,0,4,1024);x.fillRect(0,i*T-2,1024,4);}
+}
+const ftex=new THREE.CanvasTexture(fc);ftex.encoding=THREE.sRGBEncoding;ftex.wrapS=ftex.wrapT=THREE.RepeatWrapping;
+ftex.repeat.set(2*R/(4*1.4),2*R/(4*1.4));ftex.anisotropy=ren.capabilities.getMaxAnisotropy();
+const floor=new THREE.Mesh(new THREE.CircleGeometry(R+.2,96),new THREE.MeshStandardMaterial({map:ftex,roughness:.18,metalness:0,envMapIntensity:.9}));
+floor.rotation.x=-Math.PI/2;scene.add(floor);
+const wall=new THREE.Mesh(new THREE.CylinderGeometry(R,R,WH,128,1,true),new THREE.MeshStandardMaterial({color:0xfbfbfa,roughness:.95,side:THREE.BackSide}));wall.position.y=WH/2;scene.add(wall);
+const top=new THREE.Mesh(new THREE.TorusGeometry(R-.05,.08,8,128),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.6}));top.rotation.x=Math.PI/2;top.position.y=WH;scene.add(top);
+const base=new THREE.Mesh(new THREE.CylinderGeometry(R-.04,R-.04,.14,128,1,true),new THREE.MeshStandardMaterial({color:0xe7e6e1,roughness:.7,side:THREE.BackSide}));base.position.y=.07;scene.add(base);
+
+/* ---------- vidrio + cuadros ---------- */
+const loader=new THREE.TextureLoader();
+const cover=loader.load('cover.jpg');cover.encoding=THREE.sRGBEncoding;cover.anisotropy=8;
+const coverMat=new THREE.MeshBasicMaterial({map:cover,toneMapped:false});
+const glassLite=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.03,metalness:0,transparent:true,opacity:.16,clearcoat:1,clearcoatRoughness:.03,envMapIntensity:1.6,depthWrite:false});
+const edgeMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.9});
+function glassSlab(W,D,mat){
+ const g=new THREE.Group();
+ const c1=new THREE.Mesh(new THREE.PlaneGeometry(W-.3,W-.3),coverMat);c1.position.z=.01;
+ const c2=c1.clone();c2.rotation.y=Math.PI;c2.position.z=-.01;
+ const box=new THREE.Mesh(new THREE.BoxGeometry(W,W,D),mat);box.renderOrder=2;
+ const ed=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W,W,D)),edgeMat);
+ g.add(c1,c2,box,ed);g.userData.box=box;g.userData.cover=c1;return g;
+}
+const shadowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,10,64,64,64);g.addColorStop(0,'rgba(19,35,45,.22)');g.addColorStop(1,'rgba(19,35,45,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c);})();
+function labelTex(s,i){
+ const c=document.createElement('canvas');c.width=1024;c.height=300;const x=c.getContext('2d');
+ x.fillStyle='#13232d';x.textAlign='center';
+ x.globalAlpha=.6;x.font='400 30px Jost, sans-serif';
+ x.fillText((String(i+1).padStart(2,'0')+'   ·   '+s.g[lang]).toUpperCase().split('').join(String.fromCharCode(8202)),512,64);
+ x.globalAlpha=1;let sz=104;const f=z=>`italic 400 ${z}px "Cormorant Garamond", serif`;x.font=f(sz);
+ while(x.measureText(s.t).width>980&&sz>44){sz-=4;x.font=f(sz);}
+ x.fillText(s.t,512,190);
+ const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=8;return t;
+}
+const frames=[],hit=[];let totem=null,totemHit=[];
+function build(){
+ SONGS.forEach((s,i)=>{
+  const a=i/N*Math.PI*2,g=new THREE.Group();
+  g.position.set(Math.sin(a)*(R-.05),0,-Math.cos(a)*(R-.05));g.lookAt(0,0,0);
+  const sh=new THREE.Mesh(new THREE.PlaneGeometry(FS+1.6,FS+1.6),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));sh.position.set(.12,FY-.18,.02);
+  const slab=glassSlab(FS+.34,.26,glassLite);slab.position.set(0,FY,.34);
+  const lab=new THREE.Mesh(new THREE.PlaneGeometry(3.4,1),new THREE.MeshBasicMaterial({map:labelTex(s,i),transparent:true,toneMapped:false}));lab.position.set(0,LABY,.04);
+  const pool=new THREE.Mesh(new THREE.CircleGeometry(1.3,48),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}));
+  pool.rotation.x=-Math.PI/2;pool.position.set(0,.015,STAND);
+  g.add(sh,slab,lab,pool);scene.add(g);
+  slab.userData.box.userData.i=i;slab.userData.cover.userData.i=i;hit.push(slab.userData.box,slab.userData.cover);
+  frames.push({g,pool,lab,stand:new THREE.Vector3(Math.sin(a)*(R-STAND),0,-Math.cos(a)*(R-STAND))});
+ });
+ totem=new THREE.Group();
+ const tg=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.04,metalness:0,transmission:.92,transparent:true,opacity:1,ior:1.45,clearcoat:1,clearcoatRoughness:.04,envMapIntensity:1.4});
+ const slab=glassSlab(1.9,.44,tg);slab.position.y=2.15;
+ const ped=new THREE.Mesh(new THREE.CylinderGeometry(.75,.82,.9,64),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.35}));ped.position.y=.45;
+ const pedTop=new THREE.Mesh(new THREE.CylinderGeometry(.78,.78,.03,64),new THREE.MeshStandardMaterial({color:0xdedcd6,roughness:.3}));pedTop.position.y=.915;
+ totem.add(slab,ped,pedTop);totem.userData.slab=slab;scene.add(totem);
+ totemHit=[slab.userData.box,ped];
+}
+function relabel(){frames.forEach((f,i)=>{const old=f.lab.material.map;f.lab.material.map=labelTex(SONGS[i],i);f.lab.material.needsUpdate=true;old.dispose();});}
+
+/* ---------- idioma ---------- */
+function applyLang(){
+ const T=TXT[lang];document.documentElement.lang=lang;
+ document.querySelectorAll('[data-t]').forEach(el=>el.textContent=T[el.dataset.t]);
+ $('hintTxt').textContent=touch?T.hintT:T.hintD;
+ $('lang').textContent=T.langBtn;$('lang').setAttribute('aria-label',T.langAria);
+ $('prev').setAttribute('aria-label',T.prev);$('next').setAttribute('aria-label',T.next);
+ document.querySelectorAll('.x').forEach(b=>b.setAttribute('aria-label',T.close));
+ if(shown>=0)fillInfo(shown);
+ updEsc();
+ if(frames.length)relabel();
+}
+$('lang').onclick=e=>{e.stopPropagation();lang=lang==='en'?'es':'en';try{localStorage.setItem('agp-lang',lang);}catch(err){}applyLang();};
+
+/* ---------- audio: una canción a la vez ---------- */
+let ac=null,playing=-1;const tracks=[];
+function initAudio(){
+ const AC=window.AudioContext||window.webkitAudioContext;
+ try{ac=AC?new AC():null;}catch(e){ac=null;}
+ SONGS.forEach((s,i)=>{
+  const el=new Audio(s.audio);el.loop=true;el.preload='auto';el.playsInline=true;
+  let g=null;
+  if(ac){const src=ac.createMediaElementSource(el);g=ac.createGain();g.gain.value=0;src.connect(g);g.connect(ac.destination);}
+  else el.volume=0;
+  tracks.push({el,g,stopT:0});
+ });
+ if(ac&&ac.state==='suspended')ac.resume().catch(()=>{});
+}
+function setVol(i,v,tc){const tr=tracks[i];if(!tr)return;if(tr.g)tr.g.gain.setTargetAtTime(v,ac.currentTime,tc);else tr.el.volume=Math.max(0,Math.min(1,v));}
+function switchTo(i){
+ if(i===playing)return;
+ if(playing>=0){const old=tracks[playing];setVol(playing,0,.08);const el=old.el;old.stopT=setTimeout(()=>el.pause(),350);}
+ playing=i;
+ if(i>=0){const tr=tracks[i];clearTimeout(tr.stopT);setVol(i,0,.01);const p=tr.el.play();if(p&&p.catch)p.catch(()=>{});}
+}
+
+/* ---------- movimiento ---------- */
+const pos=SPAWN.clone();let yaw=0,pitch=.1,tw=null,cur=-1,started=false;
+const keys={};
+const KEYMAP={w:'f',arrowup:'f',s:'b',arrowdown:'b',a:'l',arrowleft:'l',d:'r',arrowright:'r'};
+addEventListener('keydown',e=>{const k=KEYMAP[e.key.toLowerCase()];if(k&&started){keys[k]=true;tw=null;e.preventDefault();}});
+addEventListener('keyup',e=>{const k=KEYMAP[e.key.toLowerCase()];if(k)keys[k]=false;});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
+function look(dx,dy,s){yaw-=dx*s;pitch=Math.max(-.7,Math.min(.75,pitch-dy*s));if(tw){tw.y1=null;tw.p1=null;}}
+const locked=()=>document.pointerLockElement===cv;
+let lockFailed=false,lockWorked=false;
+function updEsc(){
+ const e=$('esc');if(touch||!started){e.classList.remove('show');return;}
+ if(lockFailed){e.classList.remove('show');return;}
+ e.classList.add('show');$('escT').textContent=locked()?TXT[lang].escLock:TXT[lang].escFree;
+ e.querySelector('kbd').style.display=locked()?'':'none';
+ e.classList.toggle('pulse',locked()&&shown>=0);
+}
+function reqLock(){if(lockFailed||!cv.requestPointerLock)return;try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{if(!lockWorked)lockFailed=true;updEsc();});}catch(err){if(!lockWorked)lockFailed=true;}}
+document.addEventListener('pointerlockchange',()=>{if(locked())lockWorked=true;$('cross').classList.toggle('on',locked());updEsc();});
+document.addEventListener('pointerlockerror',()=>{if(!lockWorked)lockFailed=true;updEsc();});
+document.addEventListener('mousemove',e=>{if(locked())look(e.movementX,e.movementY,.0022);});
+let drag=null;
+cv.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'){
+  if(locked()){tapAt(0,0);return;}
+  if(lockFailed){const r=cv.getBoundingClientRect();tapAt((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);return;}
+  reqLock();return;
+ }
+ drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,moved:false};cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove',e=>{
+ if(e.pointerType==='mouse'){if(!locked()&&lockFailed)look(e.movementX||0,e.movementY||0,.003);return;}
+ if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
+ if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>8)drag.moved=true;
+ if(drag.moved){if(!dragged){dragged=true;hideLook();}look(-dx,-dy,.005);}
+});
+cv.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse'&&drag&&!drag.moved){const r=cv.getBoundingClientRect();tapAt((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);}drag=null;});
+const ray=new THREE.Raycaster(),mv=new THREE.Vector2();
+function tapAt(x,y){
+ mv.set(x,y);ray.setFromCamera(mv,cam);
+ const h=ray.intersectObjects(hit)[0];if(h){goTo(h.object.userData.i);return;}
+ if(totemHit.length&&ray.intersectObjects(totemHit)[0]){goCenter();return;}
+ const f=ray.intersectObject(floor)[0];
+ if(f){const p=new THREE.Vector3(f.point.x,0,f.point.z);clampV(p);cur=-1;travel(p,null,null);}
+}
+function clampV(v){const l=Math.hypot(v.x,v.z),mx=R-2.2;if(l>mx){v.x*=mx/l;v.z*=mx/l;}if(l<1.6){if(l>0){v.x*=1.6/l;v.z*=1.6/l;}else v.z=1.6;}}
+function faceYaw(from,to){return Math.atan2(-(to.x-from.x),-(to.z-from.z));}
+function travel(p,y1,p1){const d=Math.hypot(p.x-pos.x,p.z-pos.z);tw={from:pos.clone(),to:p,y0:yaw,y1,p0:pitch,p1,t:0,dur:Math.min(1,Math.max(.45,d/12))};}
+const FRAME_PITCH=Math.atan((GC-EYE)/(STAND-.3))*.8;
+function goTo(i){i=(i+N)%N;cur=i;const p=frames[i].stand.clone();travel(p,faceYaw(p,frames[i].g.position),FRAME_PITCH);}
+function goCenter(){cur=-1;travel(SPAWN.clone(),0,.1);}
+const atCenter=()=>Math.hypot(pos.x,pos.z)<5;
+function nearestFrame(){let b=-1,bd=1e9;frames.forEach((f,i)=>{const d=Math.hypot(pos.x-f.g.position.x,pos.z-f.g.position.z);if(d<bd){bd=d;b=i;}});return{i:b,d:bd};}
+function step(dir){
+ hideTip();
+ if(cur<0){const n=nearestFrame();if(!atCenter()&&n.d<8){goTo(n.i+dir);return;}goTo(0);return;}
+ goTo(cur+dir);
+}
+$('next').onclick=()=>step(1);
+$('prev').onclick=()=>step(-1);
+$('mid').onclick=()=>{hideTip();if(atCenter()&&!tw)goTo(0);else goCenter();};
+let albumDismissed=false,infoDismissed=-1,shown=-1;
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{const w=b.dataset.close;$(w).classList.remove('on');if(w==='album')albumDismissed=true;else{infoDismissed=shown;shown=-2;updEsc();}});
+function fillInfo(i){const s=SONGS[i];$('iNum').textContent=String(i+1).padStart(2,'0')+' · '+s.g[lang];$('iTitle').textContent=s.t;$('iText').textContent=s[lang];$('lS').href=s.spotify||AL.spotify;$('lA').href=s.apple||AL.apple;$('lY').href=s.youtube||AL.youtube;}
+let tipT=0,lookT=0,dragged=false,lookAgain=true;
+function showLook(ms){if(!touch||dragged)return;$('look').classList.add('on');clearTimeout(lookT);lookT=setTimeout(hideLook,ms);}
+function hideLook(){clearTimeout(lookT);$('look').classList.remove('on');}
+function showTip(){if(!touch)return;$('tip').classList.add('on');$('nav').classList.add('pulse');tipT=setTimeout(hideTip,9000);}
+function hideTip(){clearTimeout(tipT);$('tip').classList.remove('on');}
+$('tipX').onclick=hideTip;
+const ang=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d;};
+const ease=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+
+/* ---------- loop ---------- */
+let dwell=0,last=performance.now();
+function resize(){
+ const w=innerWidth,h=innerHeight,portrait=w<h;
+ ren.setSize(w,h,false);cam.aspect=w/h;cam.fov=portrait?80:66;
+ cam.setViewOffset(w,h,0,h*(portrait?.14:.15),w,h);
+ cam.updateProjectionMatrix();
+}
+addEventListener('resize',resize);resize();
+function loop(t){
+ const dt=Math.min(.05,(t-last)/1000);last=t;
+ const fw=(keys.f?1:0)-(keys.b?1:0),st=(keys.r?1:0)-(keys.l?1:0);
+ if(fw||st){const sp=4.2*dt,l=Math.hypot(fw,st);pos.x+=(-Math.sin(yaw)*fw+Math.cos(yaw)*st)/l*sp;pos.z+=(-Math.cos(yaw)*fw-Math.sin(yaw)*st)/l*sp;clampV(pos);cur=-1;}
+ if(tw){tw.t+=dt;const k=ease(Math.min(1,tw.t/tw.dur));pos.lerpVectors(tw.from,tw.to,k);
+  if(tw.y1!==null)yaw=tw.y0+ang(tw.y0,tw.y1)*k;
+  if(tw.p1!==null)pitch=tw.p0+(tw.p1-tw.p0)*k;
+  if(tw.t>=tw.dur){if(tw.y1!==null)yaw=tw.y1;if(tw.p1!==null)pitch=tw.p1;tw=null;}}
+ cam.position.set(pos.x,EYE,pos.z);cam.rotation.set(pitch,yaw,0);
+ if(totem){totem.userData.slab.rotation.y+=dt*.3;totem.userData.slab.position.y=2.15+Math.sin(t/1100)*.05;}
+
+ const n=nearestFrame();
+ const vol=n.d<STAND+.4?1:Math.max(0,(9-n.d)/(9-STAND-.4));
+ frames.forEach((f,i)=>f.pool.material.opacity=i===n.i?vol*.5:0);
+ if(started){
+  switchTo(vol>0?n.i:-1);
+  if(playing>=0)setVol(playing,vol*vol,.12);
+  $('now').classList.toggle('on',playing>=0&&!(innerWidth<600&&shown>=0));if(playing>=0)$('nowT').textContent=SONGS[playing].t;
+ }
+ // tarjeta de canción
+ const close=n.d<STAND+1.2&&!tw;
+ dwell=close?dwell+dt:0;
+ if(close&&dwell>.35&&shown!==n.i&&shown!==-2&&infoDismissed!==n.i){shown=n.i;fillInfo(n.i);$('info').classList.add('on');updEsc();if(lookAgain){lookAgain=false;setTimeout(()=>showLook(5000),900);}}
+ if(!close&&shown!==-1&&n.d>STAND+1.6){shown=-1;infoDismissed=-1;$('info').classList.remove('on');updEsc();}
+ // tarjeta del álbum: siempre que mires la losa del centro
+ const dc=Math.hypot(pos.x,pos.z)||.001;
+ const facing=(-Math.sin(yaw)*-pos.x+-Math.cos(yaw)*-pos.z)/dc;
+ const seeTotem=started&&!tw&&dc<10&&facing>.9&&shown<0;
+ if(!seeTotem)albumDismissed=false;
+ $('album').classList.toggle('on',seeTotem&&!albumDismissed);
+ $('mid').textContent=atCenter()&&!tw?TXT[lang].start:TXT[lang].center;
+ ren.render(scene,cam);requestAnimationFrame(loop);
+}
+
+$('enter').onclick=()=>{initAudio();started=true;$('intro').classList.add('gone');updEsc();setTimeout(showTip,1200);setTimeout(()=>showLook(9000),500);};
+applyLang();
+const fontsReady=document.fonts&&document.fonts.load?Promise.all([document.fonts.load('italic 400 104px "Cormorant Garamond"'),document.fonts.load('400 30px Jost')]).catch(()=>{}):Promise.resolve();
+Promise.race([fontsReady,new Promise(r=>setTimeout(r,1800))]).then(()=>{build();requestAnimationFrame(loop);});
+}
+</script>
+</body>
+</html>
