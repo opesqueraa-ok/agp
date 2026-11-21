@@ -1,7 +1,6 @@
 /* =========================================================
    a great perhaps - configuracion de la sala
    Aqui cambias todo sin tocar index.html:
-   - audio: ruta del mp3 de cada cancion (carpeta audio/)
    - spotify / apple / youtube: link directo de cada cancion.
      Si lo dejas vacio '', el boton abre la busqueda del artista.
    - en / es: texto de la tarjeta en ingles y en espanol
@@ -14,35 +13,35 @@ AGP.ARTIST_LINKS={
  youtube:'https://www.youtube.com/results?search_query=Ok+Pretty+Boy'
 };
 AGP.SONGS=[
- {t:'atmosfera',audio:'audio/01.mp3',spotify:'',apple:'',youtube:'',
+ {t:'atmosfera',audio:'01.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'ambient',es:'ambient'},
   en:'Born as a loop for Zuurkey Beatz, who also named it. Low notes and no words: a deep track to step into the album and give it your own meaning.',
   es:'Nació como un loop para Zuurkey Beatz, que también le puso el nombre. Notas graves y cero palabras: un track profundo para entrar al álbum y darle tu propio significado.'},
- {t:'summer crush',audio:'audio/02.mp3',spotify:'',apple:'',youtube:'',
+ {t:'summer crush',audio:'02.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'ambient trap',es:'ambient trap'},
   en:'A line found on TikTok: what someone in love would tell their crush. Summer is when they met.',
   es:'Una frase encontrada en TikTok: lo que alguien enamorado le diría a su crush. El verano es el tiempo en que la conoció.'},
- {t:'how it felt',audio:'audio/03.mp3',spotify:'',apple:'',youtube:'',
+ {t:'how it felt',audio:'03.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'ambient trap',es:'ambient trap'},
   en:'How it felt to share time with that person, like Miles with Alaska: the moments alone and everything they lived together.',
   es:'Cómo se sintió compartir el tiempo con esa persona, como Miles con Alaska: los ratos a solas y todo lo que vivieron juntos.'},
- {t:'lost in the labyrinth',audio:'audio/04.mp3',spotify:'',apple:'',youtube:'',
+ {t:'lost in the labyrinth',audio:'04.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'ambient trap',es:'ambient trap'},
   en:'Alaska’s question when she meets Miles: how will we ever get out of this labyrinth of suffering? And is the labyrinth living, or dying?',
   es:'La pregunta de Alaska al conocer a Miles: ¿cómo salimos de este laberinto de sufrimiento? Y el laberinto, ¿es vivir o morir?'},
- {t:'young, alaska',audio:'audio/05.mp3',spotify:'',apple:'',youtube:'',
+ {t:'young, alaska',audio:'05.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'ambient trap',es:'ambient trap'},
   en:'Alaska chose her name first and gave it meaning later. Same with Ok Pretty Boy: a line from a sound pack, and the OK from Metal Slug.',
   es:'Alaska escogió su nombre y después le dio significado. Igual pasó con Ok Pretty Boy: una frase de un pack de sonidos y el OK de Metal Slug.'},
- {t:'gorgeously dangerous',audio:'audio/06.mp3',spotify:'',apple:'',youtube:'',
+ {t:'gorgeously dangerous',audio:'/06.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'trap',es:'trap'},
   en:'Trap over an Italian soundtrack sample, full of violins and voices. The most beautiful song on the album; like Alaska, the more beautiful, the more dangerous.',
   es:'Trap sobre un sample de soundtrack italiano, con violines y voces. La más hermosa del álbum; como Alaska, entre más bella, más peligrosa.'},
- {t:'iris atmos',audio:'audio/07.mp3',spotify:'',apple:'',youtube:'',
+ {t:'iris atmos',audio:'07.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'in progress',es:'en construcción'},
   en:'Still under construction. Its meaning stays hidden for now.',
   es:'Todavía en construcción. Su significado se queda guardado por ahora.'},
- {t:'last kiss',audio:'audio/08.mp3',spotify:'',apple:'',youtube:'',
+ {t:'last kiss',audio:'08.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'ambient',es:'ambient'},
   en:'Miles’s last kiss with Alaska. Without the bass it feels sweet: less an ending, more a memory.',
   es:'El último beso de Miles a Alaska. Sin bajos se siente dulce: más que un final, un recuerdo.'}
