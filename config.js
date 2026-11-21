@@ -33,7 +33,7 @@ AGP.SONGS=[
   g:{en:'ambient trap',es:'ambient trap'},
   en:'Alaska chose her name first and gave it meaning later. Same with Ok Pretty Boy: a line from a sound pack, and the OK from Metal Slug.',
   es:'Alaska escogió su nombre y después le dio significado. Igual pasó con Ok Pretty Boy: una frase de un pack de sonidos y el OK de Metal Slug.'},
- {t:'gorgeously dangerous',audio:'/06.mp3',spotify:'',apple:'',youtube:'',
+ {t:'gorgeously dangerous',audio:'06.mp3',spotify:'',apple:'',youtube:'',
   g:{en:'trap',es:'trap'},
   en:'Trap over an Italian soundtrack sample, full of violins and voices. The most beautiful song on the album; like Alaska, the more beautiful, the more dangerous.',
   es:'Trap sobre un sample de soundtrack italiano, con violines y voces. La más hermosa del álbum; como Alaska, entre más bella, más peligrosa.'},
